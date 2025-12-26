@@ -334,7 +334,7 @@ body {
     font-weight: 600;
     margin-top: 10vh;
     letter-spacing: -2px;
-    font-size: 12vw;
+    font-size: 5vw;
 }
 
 .about h1 span {
@@ -343,8 +343,8 @@ body {
 }
 
 .about p {
-    font-size: 2rem;
-    margin-top: 10vh;
+    font-size: 1rem;
+    margin-top: 5vh;
     max-width: 520px;
     padding: 2.5rem 3rem;
 
