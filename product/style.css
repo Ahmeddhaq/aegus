@@ -1,6 +1,5 @@
-/* -------------------------------
-   DESIGN SYSTEM
---------------------------------*/
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
 :root {
     /* COLORS */
     --color-bg: #f7f9fc;
@@ -53,7 +52,6 @@
     --container-width: 80%;
 }
 
-
 /* -------------------------------
    RESET
 --------------------------------*/
@@ -88,7 +86,7 @@ body {
     position: absolute;
     top: 0;
     left: 0;
-    opacity: 0.8;
+    opacity: 1;
     pointer-events: none;
     z-index: 0;
 }
@@ -130,7 +128,7 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: var(--space-4);
-    background-color: #f3f3f3;
+    background-color: #FCFDFE;
 }
 
 .header .nav {
@@ -154,44 +152,12 @@ body {
 }
 
 .header .btn {
+    color: var(--color-bg);
     padding: var(--space-3) var(--space-6);
     background-color: var(--color-primary);
     border-radius: var(--radius-lg);
 }
 
-/* BUTTONS */
-
-
-.buttons .btn1,
-.header .btn {
-    cursor: pointer;
-    padding: var(--space-3) var(--space-6);
-    background-color: var(--color-primary);
-    border-radius: var(--radius-lg);
-    transition: 0.3s ease;
-    color: var(--color-bg);
-}
-
-.buttons .btn1:hover {
-    background-color: #001c82;
-}
-
-.header .btn:hover {
-    background-color: #001c82;
-}
-
-.buttons .btn2 {
-    cursor: pointer;
-    padding: var(--space-3) var(--space-6);
-    background-color: var(--color-text);
-    color: var(--color-bg);
-    border-radius: var(--radius-lg);
-    transition: 0.3s ease;
-}
-
-.buttons .btn2:hover {
-    background-color: #8b8b8b;
-}
 
 /* -------------------------------
    FOOTER
@@ -326,7 +292,17 @@ body {
         gap: var(--space-5);
     }
 
+    .hero h1 img {
+        width: 130px;
+        left: 70%;
+        top: -30px;
+    }
 
+    .hero,
+    .vision,
+    .cta {
+        padding: var(--space-1) var(--space-4);
+    }
 
     .buttons {
         transform: scale(0.8);
@@ -345,17 +321,20 @@ body {
     color: var(--color-primary) !important;
 }
 
+
 /* -------------------------------
-           TECHNOLOGY SECTION
-        --------------------------------*/
-.technology {
+   PRODUCT SECTION
+--------------------------------*/
+.product {
     width: 100%;
     display: flex;
     justify-content: center;
     padding: var(--space-10) 0;
+    position: relative;
+    z-index: 2;
 }
 
-.technology-inner {
+.product-inner {
     width: var(--container-width);
     display: flex;
     flex-direction: column;
@@ -365,124 +344,79 @@ body {
 .pill {
     width: fit-content;
     padding: 6px 14px;
-    font-size: 13px;
+    font-size: var(--fs-sm);
     border-radius: var(--radius-pill);
     background: var(--color-pill-bg);
     color: var(--color-primary);
     font-weight: 500;
 }
 
-.tech-head {
+/* Head */
+.product-head {
     max-width: 720px;
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
 }
 
-.tech-head h1 {
-    font-size: clamp(2rem, 5vw, 4rem);
-    line-height: 1.05;
+.product-head h1 {
+    font-size: var(--fs-xxl);
     font-weight: 600;
     overflow: hidden;
-    letter-spacing: -1px;
+    line-height: 1.1;
 }
 
-.tech-head p {
-    font-size: 16px;
-    opacity: 0.75;
+.product-head p {
+    font-size: var(--fs-md);
     line-height: 1.6;
+    opacity: 0.75;
 }
 
-/* TECH GRID */
-.tech-grid {
+/* Grid */
+.product-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    overflow: visible;
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-6);
 }
 
-.tech-card {
+/* Cards */
+.product-card {
     padding: var(--space-6);
     border-radius: var(--radius-md);
     background: var(--color-glass-bg);
     border: 1px solid var(--color-glass-border);
-    backdrop-filter: blur(18px);
-    /* box-shadow: var(--glass-shadow); */
-    transition: transform 0.3s ease;
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+
+    transition: transform 0.4s ease;
 }
 
-.tech-card:hover {
+.product-card h2 {
+    font-size: var(--fs-lg);
+    font-weight: 600;
+}
+
+.product-card p {
+    font-size: var(--fs-sm);
+    line-height: 1.6;
+    opacity: 0.75;
+}
+
+.product-card:hover {
     transform: translateY(-6px);
 }
 
-.tech-card h2 {
-    font-size: 18px;
-    margin-bottom: 8px;
-}
-
-.tech-card p {
-    font-size: 14px;
-    opacity: 0.75;
-    line-height: 1.6;
-}
-
-/* SECURITY STACK */
-.security-stack {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-6);
-    overflow: visible;
-}
-
-.stack-item {
-    overflow: visible;
-    padding: var(--space-6);
-    border-left: 3px solid var(--color-primary);
-    border-radius: 16px;
-
-    background: linear-gradient(180deg,
-            rgba(26, 76, 255, 0.06),
-            rgba(255, 255, 255, 0.65));
-
-
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.stack-item:hover {
-    transform: translateY(-4px);
-
-}
-
-.stack-item h3 {
-    font-size: 16px;
-    margin-bottom: 8px;
-}
-
-.stack-item p {
-    font-size: 14px;
-    opacity: 0.75;
-    line-height: 1.6;
-}
-
-
+/* Mobile */
 @media (max-width: 768px) {
-
-    .technology {
-        padding: var(--space-8) 0;
-    }
-
-    .technology-inner,
-    .footer-inner {
-        width: 90%;
-    }
-
-    .tech-grid,
-    .security-stack {
+    .product-grid {
         grid-template-columns: 1fr;
     }
 
-    .stack-item {
-        border-left: none;
-        border-top: 3px solid var(--color-primary);
+    .product-head h1 {
+        font-size: var(--fs-xl);
     }
 }

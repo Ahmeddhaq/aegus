@@ -3,9 +3,12 @@
 --------------------------------*/
 :root {
     /* COLORS */
-    --color-bg: #f7f9fc; /* soft white */
-    --color-text: #0f1222; /* deep navy text */
-    --color-primary: #1a4cff; /* rich blue */
+    --color-bg: #f7f9fc;
+    /* soft white */
+    --color-text: #0f1222;
+    /* deep navy text */
+    --color-primary: #1a4cff;
+    /* rich blue */
 
     --color-glass-bg: rgba(255, 255, 255, 0.65);
     --color-glass-border: rgba(15, 18, 34, 0.08);
