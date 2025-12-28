@@ -1,13 +1,13 @@
-/* -------------------------------
-   DESIGN SYSTEM
---------------------------------*/
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 :root {
     /* COLORS */
-    --color-bg: #f7f9fc; /* soft white */
-    --color-text: #0f1222; /* deep navy text */
-    --color-primary: #1a4cff; /* rich blue */
+    --color-bg: #f7f9fc;
+    /* soft white */
+    --color-text: #0f1222;
+    /* deep navy text */
+    --color-primary: #1a4cff;
+    /* rich blue */
 
     --color-glass-bg: rgba(255, 255, 255, 0.65);
     --color-glass-border: rgba(15, 18, 34, 0.08);
@@ -51,6 +51,7 @@
     /* LAYOUT */
     --container-width: 80%;
 }
+
 /* -------------------------------
    RESET
 --------------------------------*/
@@ -320,9 +321,105 @@ body {
     color: var(--color-primary) !important;
 }
 
+/* -------------------------------
+   SOLUTIONS SECTION
+--------------------------------*/
+.solutions {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: var(--space-10) 0;
+    position: relative;
+    z-index: 2;
+}
 
+.solutions-inner {
+    width: var(--container-width);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-9);
+}
 
+/* Head */
+.solutions-head {
+    max-width: 700px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
 
+.solutions-head h1 {
+    font-size: var(--fs-xxl);
+    font-weight: 600;
+    overflow: hidden;
+    line-height: 1.1;
+}
 
+.solutions-head p {
+    font-size: var(--fs-md);
+    opacity: 0.75;
+    line-height: 1.6;
+}
 
+/* Pill */
+.pill {
+    width: fit-content;
+    padding: 6px 14px;
+    font-size: var(--fs-sm);
+    border-radius: var(--radius-pill);
+    background: var(--color-pill-bg);
+    color: var(--color-primary);
+    font-weight: 500;
+}
 
+/* Grid */
+.solutions-grid {
+    display: grid;
+    overflow: visible;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+}
+
+/* Card */
+.solution-card {
+    padding: var(--space-6);
+    border-radius: var(--radius-md);
+    background: var(--color-glass-bg);
+    border: 1px solid var(--color-glass-border);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    /* box-shadow: var(--glass-shadow); */
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.solution-card h2 {
+    font-size: var(--fs-lg);
+    font-weight: 600;
+}
+
+.solution-card p {
+    font-size: var(--fs-sm);
+    opacity: 0.75;
+    line-height: 1.6;
+}
+
+/* Hover (subtle, premium) */
+.solution-card:hover {
+    transform: translateY(-6px);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .solutions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .solutions-head h1 {
+        font-size: var(--fs-xl);
+    }
+}
