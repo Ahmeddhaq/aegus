@@ -1,0 +1,587 @@
+import { renderTemplate, removeGlobalStyles, ready, initPageEnhancements, injectPageStyles } from './common';
+
+const template = `<div id="main">
+
+        <div class="menu-overlay">
+            <div class="menu-overlay-inner">
+                <div class="menu-overlay-header">
+                    <div class="menu-overlay-top">
+                        <span class="menu-label">Menu</span>
+                    </div>
+
+                    <button class="menu-close" aria-label="Close menu">
+                        <span></span>
+                        <span></span>
+                    </button>
+
+                </div>
+
+                <nav class="menu-links">
+                    <a href="/">Home</a>
+                    <a href="/about/">About</a>
+                    <a href="/product/">Products</a>
+                    <a href="/solution/">Solutions</a>
+                    <a href="/technology/">Technology</a>
+                    <a href="/contact/" class="active">Contact</a>
+                </nav>
+
+                <div class="menu-overlay-footer">
+                    <p>Secure Offline AI for Professionals</p>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="header">
+            <img src="/assets/logo.svg" alt="logo">
+            <div class="nav">
+                <a href="/">Home</a>
+                <a href="/about/">About</a>
+                <a href="/product/">Products</a>
+                <a href="/solution/">Solutions</a>
+                <a href="/technology/">Technology</a>
+                <a href="/contact/" class="active">Contact</a>
+            </div>
+            <div class="btn">Explore Products</div>
+
+            <div class="menu">
+                <hr>
+                <hr>
+            </div>
+
+        </div>
+
+        <div class="contact">
+            <div class="tittle">Contact Us</div>
+
+            <h1>Get in Touch</h1>
+
+            <form class="contact-form">
+                <input type="text" placeholder="Your Name">
+                <input type="email" placeholder="Your Email">
+                <textarea placeholder="Your Message"></textarea>
+
+                <button type="submit">Send Message</button>
+            </form>
+        </div>
+
+        <div class="footer">
+            <div class="footer-inner">
+
+                <div class="col logo-col">
+                    <img src="/assets/logo.svg" alt="logo">
+                    <p>Secure Offline AI for Professionals</p>
+                </div>
+
+                <div class="col">
+                    <h3>Explore</h3>
+                    <a href="/about/">About</a>
+                    <a href="/product/">Products</a>
+                    <a href="/solution/">Solutions</a>
+                    <a href="/technology/">Technology</a>
+                    <a href="/contact/">Contact</a>
+                </div>
+
+                <div class="col">
+                    <h3>Legal</h3>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Privacy Policy</a>
+                </div>
+
+            </div>
+        </div>
+
+    </div>`;
+
+const contactStyles = `/* -------------------------------
+   DESIGN SYSTEM
+--------------------------------*/
+:root {
+    /* COLORS */
+    --color-bg: #f7f9fc;
+    /* soft white */
+    --color-text: #0f1222;
+    /* deep navy text */
+    --color-primary: #1a4cff;
+    /* rich blue */
+
+    --color-glass-bg: rgba(255, 255, 255, 0.65);
+    --color-glass-border: rgba(15, 18, 34, 0.08);
+    --color-pill-bg: #eef2ff;
+
+    --header-bg: #ffffff;
+
+    /* SPACING (8px scale) */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 40px;
+    --space-8: 48px;
+    --space-9: 60px;
+    --space-10: 80px;
+
+    /* FONT SIZES */
+    --fs-xs: 10px;
+    --fs-sm: 14px;
+    --fs-md: 16px;
+    --fs-lg: 1rem;
+    --fs-xl: 2rem;
+    --fs-xxl: 4rem;
+
+    /* RADII */
+    --radius-pill: 50px;
+    --radius-lg: 30px;
+    --radius-md: 24px;
+    --radius-sm: 12px;
+
+    /* BLUR */
+    --blur-hero: blur(24px) saturate(1.2);
+    --blur-footer: blur(22px) saturate(1.2);
+
+    /* SHADOW (lighter, cleaner) */
+    --glass-shadow: 0 10px 40px rgba(15, 18, 34, 0.08);
+
+    /* LAYOUT */
+    --container-width: 80%;
+}
+
+/* -------------------------------
+   RESET
+--------------------------------*/
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    text-decoration: none;
+    overflow-x: hidden;
+}
+
+html,
+body {
+    width: 100%;
+    min-height: 100%;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: sf-pro, sans-serif;
+}
+
+@font-face {
+    font-family: sf-pro;
+    src: url(../fonts/SF-PRO.TTF);
+}
+
+/* -------------------------------
+   BACKGROUND
+--------------------------------*/
+.bg {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0.8;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+}
+
+/* -------------------------------
+   MAIN WRAPPER
+--------------------------------*/
+#main {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* -------------------------------
+   HEADER
+--------------------------------*/
+.header {
+    width: 100vw;
+    position: fixed;
+
+    backdrop-filter: blur(20px) saturate(200%);
+    -webkit-backdrop-filter: blur(20px) saturate(200%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4);
+    background-color: #f3f3f3;
+}
+.header .nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-md);
+
+    /* background: var(--color-glass-bg); */
+    /* border: 1px solid var(--color-glass-border); */
+    backdrop-filter: var(--blur-hero);
+    /* box-shadow: var(--glass-shadow); */
+}
+
+.header .nav a {
+    color: var(--color-text);
+    font-size: var(--fs-md);
+    opacity: 0.9;
+}
+
+.header .btn {
+    padding: var(--space-3) var(--space-6);
+    background-color: var(--color-primary);
+    border-radius: var(--radius-lg);
+    color: var(--color-bg);
+}
+
+
+
+/* BUTTONS */
+.buttons {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+}
+
+.active {
+    color: var(--color-primary) !important;
+}
+
+.buttons .btn1,
+.header .btn {
+    cursor: pointer;
+    padding: var(--space-3) var(--space-6);
+    background-color: var(--color-primary);
+    border-radius: var(--radius-lg);
+    transition: 0.3s ease;
+}
+
+.buttons .btn1:hover {
+    background-color: #001c82;
+}
+
+.header .btn:hover {
+    background-color: #001c82;
+}
+
+
+
+/* -------------------------------
+   FOOTER
+--------------------------------*/
+.footer {
+    width: 100%;
+    padding: var(--space-9) 0;
+    margin-top: var(--space-10);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: var(--color-glass-bg);
+    border-top: 1px solid var(--color-glass-border);
+    backdrop-filter: var(--blur-footer);
+}
+
+.footer-inner {
+    width: var(--container-width);
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-7);
+}
+
+.footer .col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.footer .col h3 {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    opacity: 0.7;
+}
+
+.footer .col a {
+    font-size: var(--fs-sm);
+    color: var(--color-text);
+    opacity: 0.8;
+    transition: 0.2s;
+}
+
+.footer .col a:hover {
+    opacity: 1;
+}
+
+.logo-col img {
+    width: 140px;
+    margin-bottom: var(--space-3);
+}
+
+.logo-col p {
+    font-size: var(--fs-sm);
+    opacity: 0.6;
+}
+
+.menu {
+    display: none;
+}
+
+.col h3 {
+    color: #fff;
+}
+
+.menu-overlay {
+    display: none;
+}
+
+
+/* CONTACT SECTION */
+.contact {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    min-height: 70vh;
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-5);
+    text-align: center;
+}
+
+.contact h1 {
+    font-size: var(--fs-xl);
+    font-weight: 600;
+}
+
+.contact-form {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.contact-form input,
+.contact-form textarea {
+    width: 100%;
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--color-glass-bg);
+    border: 1px solid var(--color-glass-border);
+    color: var(--color-text);
+    font-size: var(--fs-md);
+    outline: none;
+    backdrop-filter: var(--blur-hero);
+}
+
+.contact-form textarea {
+    height: 150px;
+    resize: none;
+}
+
+.contact-form button {
+    background: var(--color-primary);
+    color: #fff;
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    font-size: var(--fs-md);
+    transition: 0.3s;
+}
+
+.contact-form button:hover {
+    background-color: #001c82;
+}
+
+/* -------------------------------
+   MOBILE
+--------------------------------*/
+@media (max-width: 768px) {
+    :root {
+        --fs-xxl: 2.5rem;
+        --fs-xl: 1.5rem;
+        --container-width: 90%;
+    }
+
+    .header .nav,
+    .header .btn {
+        display: none;
+    }
+
+    .menu {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-3);
+        overflow: hidden;
+    }
+
+    .menu hr {
+        height: 1px;
+        width: 30px;
+        background-color: #fff;
+    }
+
+    /* -------------------------------
+   MOBILE MENU (PRO)
+--------------------------------*/
+    .menu-overlay {
+        position: fixed;
+        top: 0;
+        left: 100%;
+        width: 100vw;
+        height: 100vh;
+        background: #0b0d16;
+        z-index: 999;
+
+        display: flex;
+        justify-content: center;
+    }
+
+    .menu-overlay-inner {
+        width: 100%;
+        padding: 32px 28px;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    /* Top */
+    .menu-overlay-top {
+        font-size: 12px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        opacity: 0.6;
+        color: #fff;
+    }
+
+    .menu-overlay-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    /* Close button */
+    .menu-close {
+        width: 36px;
+        height: 36px;
+        background: none;
+        border: none;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .menu-close span {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 20px;
+        height: 2px;
+        background: #fff;
+        transform-origin: center;
+    }
+
+    .menu-close span:first-child {
+        transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    .menu-close span:last-child {
+        transform: translate(-50%, -50%) rotate(-45deg);
+    }
+
+    .menu-close:hover {
+        opacity: 0.8;
+    }
+
+    /* Links */
+    .menu-links {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+    }
+
+    .menu-links a {
+        font-size: 1.8rem;
+        font-weight: 500;
+        color: #fff;
+        opacity: 0.9;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .menu-links a:hover {
+        opacity: 1;
+        transform: translateX(4px);
+    }
+
+    .menu-links a.active {
+        color: var(--color-primary);
+        opacity: 1;
+    }
+
+    /* Footer */
+    .menu-overlay-footer {
+        font-size: 13px;
+        opacity: 0.5;
+        color: #fff;
+    }
+
+    .footer-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-5);
+    }
+
+
+
+    .buttons {
+        transform: scale(0.8);
+    }
+
+    .contact-form {
+        width: 90%;
+    }
+
+    .contact h1 {
+        font-size: 2rem;
+    }
+
+}
+
+
+.nav a {
+    transition: all 0.3s ease;
+}
+
+.nav a:hover {
+    color: var(--color-primary) !important;
+}`;
+
+async function start() {
+    renderTemplate(template);
+    removeGlobalStyles();
+    injectPageStyles(contactStyles, 'page-contact-styles');
+    await initPageEnhancements();
+}
+
+ready(() => {
+    void start();
+});

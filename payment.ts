@@ -1,0 +1,536 @@
+import { renderTemplate, removeGlobalStyles, ready, loadExternalScript, injectPageStyles, initPageEnhancements } from './common';
+
+declare const Razorpay: { new (options: Record<string, unknown>): { open(): void } } | undefined;
+
+const API_BASE = 'http://127.0.0.1:3000';
+
+const template = `<div class="page-container">
+        <h2 class="brand-logo">
+            <img src="/assets/logo.svg" alt="logo">
+        </h2>
+        <div class="halftone-bg"></div>
+        <div class="content-wrapper">
+            <div class="payment-card">
+                <h1 class="title">Complete Your Payment</h1>
+                <p class="subtitle">Secure payment to activate your account</p>
+
+                <button class="submit-btn" id="pay-now">Pay Now</button>
+
+                <div class="security-info">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <p>Your payment is secure and encrypted</p>
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+const paymentStyles = `/* -------------------------------
+   DESIGN SYSTEM
+--------------------------------*/
+:root {
+    /* COLORS */
+    --color-bg: #f7f9fc;
+    /* soft white */
+    --color-text: #0f1222;
+    /* deep navy text */
+    --color-primary: #1a4cff;
+    /* rich blue */
+
+    --color-glass-bg: rgba(255, 255, 255, 0.65);
+    --color-glass-border: rgba(15, 18, 34, 0.08);
+    --color-pill-bg: #eef2ff;
+
+    --header-bg: #ffffff;
+
+    /* SPACING (8px scale) */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 40px;
+    --space-8: 48px;
+    --space-9: 60px;
+    --space-10: 80px;
+
+    /* FONT SIZES */
+    --fs-xs: 10px;
+    --fs-sm: 14px;
+    --fs-md: 16px;
+    --fs-lg: 1rem;
+    --fs-xl: 2rem;
+    --fs-xxl: 4rem;
+
+    /* RADII */
+    --radius-pill: 50px;
+    --radius-lg: 30px;
+    --radius-md: 24px;
+    --radius-sm: 12px;
+
+    /* BLUR */
+    --blur-hero: blur(24px) saturate(1.2);
+    --blur-footer: blur(22px) saturate(1.2);
+
+    /* SHADOW (lighter, cleaner) */
+    --glass-shadow: 0 10px 40px rgba(15, 18, 34, 0.08);
+
+    /* LAYOUT */
+    --container-width: 80%;
+}
+
+/* -------------------------------
+   RESET
+--------------------------------*/
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    text-decoration: none;
+    overflow-x: hidden;
+}
+
+html,
+body {
+    width: 100%;
+    min-height: 100%;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: sf-pro, sans-serif;
+}
+
+@font-face {
+    font-family: sf-pro;
+    src: url(../fonts/SF-PRO.TTF);
+}
+
+/* -------------------------------
+   BACKGROUND
+--------------------------------*/
+.bg {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0.8;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    mask-image: linear-gradient(to bottom,
+            rgba(0, 0, 0, 1) 50%,
+            rgba(0, 0, 0, 0) 100%);
+    -webkit-mask-image: linear-gradient(to bottom,
+            rgba(0, 0, 0, 1) 50%,
+            rgba(0, 0, 0, 0) 100%);
+}
+
+/* -------------------------------
+   MAIN WRAPPER
+--------------------------------*/
+#main {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* -------------------------------
+   HEADER
+--------------------------------*/
+.header {
+    width: 100vw;
+    position: fixed;
+
+    backdrop-filter: blur(20px) saturate(200%);
+    -webkit-backdrop-filter: blur(20px) saturate(200%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4);
+    background-color: #f3f3f3;
+    gap: 10px;
+}
+
+.header .nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    margin-left: 0;
+
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-md);
+
+    backdrop-filter: var(--blur-hero);
+}
+
+.header .nav a {
+    color: var(--color-text);
+    font-size: var(--fs-md);
+    opacity: 0.9;
+}
+
+.header .btn {
+    padding: var(--space-3) var(--space-6);
+    background-color: var(--color-primary);
+    border-radius: var(--radius-lg);
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.signin {
+    margin-right: 30px;
+}
+
+.signin a {
+    color: var(--color-text);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    opacity: 0.9;
+    transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.signin a:hover {
+    color: var(--color-primary);
+    opacity: 1;
+}
+
+.register {
+    margin-right: 20px;
+}
+
+.register a {
+    color: var(--color-text);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    opacity: 0.9;
+    transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.register a:hover {
+    color: var(--color-primary);
+    opacity: 1;
+}
+
+/* Logo position */
+.header .logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.header .logo img {
+    height: 40px;
+    width: auto;
+}
+
+.header .logo a {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-text);
+    font-weight: 600;
+    font-size: var(--fs-lg);
+}
+
+/* PAGE CONTAINER */
+.page-container {
+    position: relative;
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.brand-logo {
+    position: absolute;
+    top: 40px;
+    left: 40px;
+    width: auto;
+    z-index: 10;
+}
+
+.brand-logo img {
+    width: 120px;
+    height: auto;
+}
+
+.halftone-bg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0.03;
+    pointer-events: none;
+}
+
+.content-wrapper {
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    overflow: hidden;
+}
+
+/* PAYMENT CARD */
+.payment-card {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: left;
+    padding-top: 40px;
+}
+
+.title {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+    color: var(--color-primary);
+}
+
+.subtitle {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 32px;
+    text-transform: lowercase;
+}
+
+.payment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.form-group {
+    margin-bottom: 10px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--color-text);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: sf-pro, sans-serif;
+}
+
+.form-group input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(26, 76, 255, 0.1);
+}
+
+.form-group input::placeholder {
+    color: #ccc;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.form-row .form-group {
+    margin-bottom: 0;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--color-primary);
+    color: #fff;
+    border: none;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: opacity 0.2s, background-color 0.2s;
+}
+
+.submit-btn:hover {
+    opacity: 0.9;
+    background-color: #0d3ad6;
+}
+
+.security-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+    padding: 12px 16px;
+    background-color: rgba(26, 76, 255, 0.05);
+    border-radius: 12px;
+    color: #666;
+    font-size: 12px;
+}
+
+.security-info svg {
+    color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+.security-info p {
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .halftone-bg {
+        display: none;
+    }
+    .content-wrapper {
+        justify-content: center;
+        padding: 20px;
+    }
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}`;
+
+function checkUserRegistration(): void {
+    const userSession = localStorage.getItem('userSession');
+    if (!userSession) {
+        window.location.href = '/register/';
+    }
+}
+
+function resetButton(button: HTMLButtonElement): void {
+    button.disabled = false;
+    button.textContent = 'Pay Now';
+}
+
+async function ensureRazorpayScript(): Promise<void> {
+    await loadExternalScript('https://checkout.razorpay.com/v1/checkout.js', 'razorpay-checkout');
+}
+
+async function startPayment(button: HTMLButtonElement): Promise<void> {
+    button.disabled = true;
+    button.textContent = 'Processing...';
+
+    try {
+        await ensureRazorpayScript();
+        if (typeof Razorpay === 'undefined') {
+            throw new Error('Payment script unavailable.');
+        }
+
+        const orderResponse = await fetch(`${API_BASE}/api/create-order`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                amount: 49900,
+                currency: 'INR',
+                email: localStorage.getItem('userEmail') || '',
+            }),
+        });
+
+        if (!orderResponse.ok) {
+            throw new Error('Failed to create order');
+        }
+
+        const order = await orderResponse.json();
+
+        const options = {
+            key: order.keyId,
+            amount: order.amount,
+            currency: order.currency,
+            name: 'Aegus',
+            description: 'Account activation',
+            order_id: order.orderId,
+            prefill: { email: localStorage.getItem('userEmail') || order.email || '' },
+            theme: { color: '#1a4cff' },
+            handler: async (payload: Record<string, string>) => {
+                try {
+                    const verifyRes = await fetch(`${API_BASE}/api/verify-payment`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            orderId: order.orderId,
+                            paymentId: payload.razorpay_payment_id,
+                            signature: payload.razorpay_signature,
+                        }),
+                    });
+
+                    if (!verifyRes.ok) {
+                        throw new Error('Verification failed');
+                    }
+                    const verifyJson = await verifyRes.json();
+                    if (verifyJson.status !== 'ok') {
+                        throw new Error('Signature invalid');
+                    }
+
+                    localStorage.setItem('paymentStatus', 'completed');
+                    localStorage.setItem('paymentDate', new Date().toISOString());
+                    localStorage.setItem('transactionId', payload.razorpay_payment_id || '');
+
+                    window.location.href = '/dashboard/';
+                } catch (error) {
+                    console.error('Verification error:', error);
+                    alert('Payment verification failed. Please contact support.');
+                    resetButton(button);
+                }
+            },
+            modal: {
+                ondismiss: () => resetButton(button),
+            },
+        };
+
+        const razorpayInstance = new Razorpay(options as Record<string, unknown>);
+        razorpayInstance.open();
+    } catch (error) {
+        console.error(error);
+        alert('Unable to start payment. Please try again.');
+        resetButton(button);
+    }
+}
+
+function attachHandler(): void {
+    const payBtn = document.getElementById('pay-now') as HTMLButtonElement | null;
+    if (!payBtn) {
+        return;
+    }
+
+    payBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        void startPayment(payBtn);
+    });
+}
+
+async function init(): Promise<void> {
+    renderTemplate(template);
+    removeGlobalStyles();
+    injectPageStyles(paymentStyles, 'page-payment-styles');
+    await initPageEnhancements();
+    checkUserRegistration();
+    attachHandler();
+}
+
+ready(() => {
+    void init();
+});
