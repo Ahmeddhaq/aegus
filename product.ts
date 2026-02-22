@@ -118,6 +118,10 @@ const template = `<div id="main">
 
                 </div>
 
+                <div class="buy-cta">
+                    <button class="buy-btn" id="buy-usbot" type="button">Buy USBot</button>
+                </div>
+
             </div>
 
         </section>
@@ -662,6 +666,30 @@ body {
     gap: var(--space-6);
 }
 
+.buy-cta {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: var(--space-9);
+}
+
+.buy-btn {
+    padding: var(--space-3) var(--space-7);
+    border: none;
+    border-radius: var(--radius-lg);
+    background: var(--color-primary);
+    color: white;
+    font-size: var(--fs-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.buy-btn:hover {
+    background-color: #0d3ad6;
+    transform: translateY(-2px);
+}
+
 /* Cards */
 .product-card {
     padding: var(--space-6);
@@ -709,6 +737,32 @@ async function start() {
     removeGlobalStyles();
     injectPageStyles(productStyles, 'page-product-styles');
     await initPageEnhancements();
+    setupBuyButton();
+}
+
+function setupBuyButton(): void {
+    const buyButton = document.getElementById('buy-usbot') as HTMLButtonElement | null;
+    if (!buyButton) {
+        return;
+    }
+
+    buyButton.addEventListener('click', async () => {
+        try {
+            const response = await fetch('/api/auth/check', { credentials: 'include' });
+            if (!response.ok) {
+                window.location.href = '/register/';
+                return;
+            }
+            const payload = await response.json();
+            if (payload?.paid) {
+                window.location.href = '/dashboard/';
+            } else {
+                window.location.href = '/payment/';
+            }
+        } catch {
+            window.location.href = '/register/';
+        }
+    });
 }
 
 ready(() => {
