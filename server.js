@@ -7,13 +7,15 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 const esbuild = require('esbuild');
+const { adminClient } = require('./lib/supabaseClient');
 const { 
   createSession, 
   verifySession, 
   registerUser, 
   signInUser, 
   signOutUser,
-  getUser 
+  getUser,
+  updateUserProfile
 } = require('./lib/authUtils');
 
 dotenv.config();
@@ -126,6 +128,14 @@ async function verifySessionMiddleware(req, res, next) {
   next();
 }
 
+async function getPaidStatus(userId) {
+  const userData = await getUser(userId);
+  return {
+    paid: Boolean(userData?.profile?.is_paid),
+    userData,
+  };
+}
+
 // ============== AUTHENTICATION ROUTES ==============
 
 /**
@@ -185,6 +195,8 @@ app.post('/api/auth/register', async (req, res) => {
         fullName,
       },
       expiresAt,
+      paid: false,
+      paymentRequired: true,
     });
   } catch (error) {
     console.error('Register error:', error);
@@ -220,6 +232,7 @@ app.post('/api/auth/signin', async (req, res) => {
 
     // Sign in user
     const { user, profile } = await signInUser(email, password);
+    const paid = Boolean(profile?.is_paid);
 
     // Create session
     const ipAddress = req.ip || req.connection.remoteAddress;
@@ -245,6 +258,8 @@ app.post('/api/auth/signin', async (req, res) => {
         fullName: profile?.full_name,
       },
       expiresAt,
+      paid,
+      paymentRequired: !paid,
     });
   } catch (error) {
     console.error('Sign in error:', error);
@@ -308,7 +323,7 @@ app.get('/api/auth/check', async (req, res) => {
     }
 
     // Get user and profile data
-    const userData = await getUser(session.user_id);
+    const { paid, userData } = await getPaidStatus(session.user_id);
     
     if (!userData) {
       return res.status(401).json({ error: 'User not found', code: 'USER_NOT_FOUND' });
@@ -320,7 +335,8 @@ app.get('/api/auth/check', async (req, res) => {
         id: userData.user.id,
         email: userData.user.email,
         fullName: userData.profile?.full_name,
-      }
+      },
+      paid,
     });
   } catch (error) {
     console.error('Check auth error:', error);
@@ -369,6 +385,27 @@ app.get('/api/auth/google/callback', async (req, res) => {
 
     if (error) throw error;
 
+    const fullName = data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email || '';
+    const { data: profileData, error: profileError } = await adminClient
+      .from('user_profiles')
+      .select('id')
+      .eq('id', data.user.id)
+      .single();
+
+    if (profileError || !profileData) {
+      const { error: upsertError } = await adminClient
+        .from('user_profiles')
+        .upsert({
+          id: data.user.id,
+          email: data.user.email,
+          full_name: fullName,
+        });
+
+      if (upsertError) {
+        console.warn('Profile upsert failed for Google user:', upsertError);
+      }
+    }
+
     // Create session in database
     const ipAddress = req.ip || req.connection.remoteAddress;
     const userAgent = req.headers['user-agent'];
@@ -383,8 +420,8 @@ app.get('/api/auth/google/callback', async (req, res) => {
       path: '/',
     });
 
-    // Redirect to dashboard
-    res.redirect('/dashboard/');
+    const { paid } = await getPaidStatus(data.user.id);
+    res.redirect(paid ? '/dashboard/' : '/payment/');
   } catch (error) {
     console.error('Google callback error:', error);
     res.redirect('/signin/?error=google_auth_failed');
@@ -404,6 +441,31 @@ app.use('/dashboard', async (req, res, next) => {
   if (!session) {
     res.clearCookie('sessionToken');
     return res.redirect('/register/');
+  }
+
+  const { paid } = await getPaidStatus(session.user_id);
+  if (!paid) {
+    return res.redirect('/payment/');
+  }
+
+  return next();
+});
+
+app.use('/payment', async (req, res, next) => {
+  const sessionToken = req.cookies.sessionToken;
+  if (!sessionToken) {
+    return res.redirect('/signin/');
+  }
+
+  const session = await verifySession(sessionToken);
+  if (!session) {
+    res.clearCookie('sessionToken');
+    return res.redirect('/signin/');
+  }
+
+  const { paid } = await getPaidStatus(session.user_id);
+  if (paid) {
+    return res.redirect('/dashboard/');
   }
 
   return next();
@@ -455,7 +517,7 @@ app.use(express.static(path.join(__dirname)));
  * POST /api/create-order
  * Create a Razorpay order
  */
-app.post('/api/create-order', async (req, res) => {
+app.post('/api/create-order', verifySessionMiddleware, async (req, res) => {
   try {
     const { amount = 49900, currency = 'INR', email } = req.body || {};
 
@@ -482,7 +544,7 @@ app.post('/api/create-order', async (req, res) => {
  * POST /api/verify-payment
  * Verify payment signature from Razorpay
  */
-app.post('/api/verify-payment', verifySessionMiddleware, (req, res) => {
+app.post('/api/verify-payment', verifySessionMiddleware, async (req, res) => {
   try {
     const { orderId, paymentId, signature } = req.body || {};
     if (!orderId || !paymentId || !signature) {
@@ -497,10 +559,31 @@ app.post('/api/verify-payment', verifySessionMiddleware, (req, res) => {
       return res.status(400).json({ error: 'invalid_signature' });
     }
 
+    const paidAt = new Date().toISOString();
+    await updateUserProfile(req.user.id, {
+      is_paid: true,
+      payment_id: paymentId,
+      payment_at: paidAt,
+    });
+
     return res.json({ status: 'ok' });
   } catch (err) {
     console.error('verify-payment error:', err);
     return res.status(500).json({ error: 'verify_failed' });
+  }
+});
+
+/**
+ * GET /api/billing/status
+ * Check if the signed-in user has completed payment
+ */
+app.get('/api/billing/status', verifySessionMiddleware, async (req, res) => {
+  try {
+    const { paid } = await getPaidStatus(req.user.id);
+    return res.json({ paid });
+  } catch (error) {
+    console.error('billing status error:', error);
+    return res.status(500).json({ error: 'billing_status_failed' });
   }
 });
 

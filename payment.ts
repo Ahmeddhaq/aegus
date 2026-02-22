@@ -2,7 +2,7 @@ import { renderTemplate, removeGlobalStyles, ready, loadExternalScript, injectPa
 
 declare const Razorpay: { new (options: Record<string, unknown>): { open(): void } } | undefined;
 
-const API_BASE = 'http://127.0.0.1:3000';
+const API_BASE = '';
 
 const template = `<div class="page-container">
         <h2 class="brand-logo">
@@ -414,10 +414,31 @@ body {
     }
 }`;
 
-function checkUserRegistration(): void {
-    const userSession = localStorage.getItem('userSession');
-    if (!userSession) {
-        window.location.href = '/register/';
+interface AuthCheckResponse {
+    authenticated: boolean;
+    user: {
+        email?: string;
+    };
+    paid?: boolean;
+}
+
+let currentUserEmail = '';
+
+async function ensurePaymentAccess(): Promise<void> {
+    const response = await fetch('/api/auth/check', {
+        credentials: 'include',
+    });
+
+    if (!response.ok) {
+        window.location.href = '/signin/';
+        return;
+    }
+
+    const payload = (await response.json()) as AuthCheckResponse;
+    currentUserEmail = payload.user?.email || '';
+
+    if (payload.paid) {
+        window.location.href = '/dashboard/';
     }
 }
 
@@ -443,10 +464,11 @@ async function startPayment(button: HTMLButtonElement): Promise<void> {
         const orderResponse = await fetch(`${API_BASE}/api/create-order`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({
                 amount: 49900,
                 currency: 'INR',
-                email: localStorage.getItem('userEmail') || '',
+                email: currentUserEmail,
             }),
         });
 
@@ -463,13 +485,14 @@ async function startPayment(button: HTMLButtonElement): Promise<void> {
             name: 'Aegus',
             description: 'Account activation',
             order_id: order.orderId,
-            prefill: { email: localStorage.getItem('userEmail') || order.email || '' },
+            prefill: { email: currentUserEmail || order.email || '' },
             theme: { color: '#1a4cff' },
             handler: async (payload: Record<string, string>) => {
                 try {
                     const verifyRes = await fetch(`${API_BASE}/api/verify-payment`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
                         body: JSON.stringify({
                             orderId: order.orderId,
                             paymentId: payload.razorpay_payment_id,
@@ -484,10 +507,6 @@ async function startPayment(button: HTMLButtonElement): Promise<void> {
                     if (verifyJson.status !== 'ok') {
                         throw new Error('Signature invalid');
                     }
-
-                    localStorage.setItem('paymentStatus', 'completed');
-                    localStorage.setItem('paymentDate', new Date().toISOString());
-                    localStorage.setItem('transactionId', payload.razorpay_payment_id || '');
 
                     window.location.href = '/dashboard/';
                 } catch (error) {
@@ -527,7 +546,7 @@ async function init(): Promise<void> {
     removeGlobalStyles();
     injectPageStyles(paymentStyles, 'page-payment-styles');
     await initPageEnhancements();
-    checkUserRegistration();
+    await ensurePaymentAccess();
     attachHandler();
 }
 

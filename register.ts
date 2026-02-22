@@ -34,6 +34,8 @@ const template = `<div class="page-container">
         <span>OR</span>
       </div>
 
+      <div id="register-error" class="form-error" role="alert"></div>
+
       <form class="signup-form">
         <div class="form-group">
           <label>Full Name</label>
@@ -266,6 +268,21 @@ img {
     font-size: 11px;
 }
 
+  .form-error {
+    display: none;
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #fff3f3;
+    color: #b10000;
+    font-size: 12px;
+    border: 1px solid #ffd6d6;
+  }
+
+  .form-error.visible {
+    display: block;
+  }
+
 .form-group {
     margin-bottom: 10px;
 }
@@ -346,6 +363,111 @@ async function start() {
     removeGlobalStyles();
     injectPageStyles(registerStyles, 'page-register-styles');
     await initPageEnhancements();
+  setupRegister();
+}
+
+function showRegisterError(message: string): void {
+  const errorEl = document.getElementById('register-error');
+  if (!errorEl) {
+    alert(message);
+    return;
+  }
+  errorEl.textContent = message;
+  errorEl.classList.add('visible');
+}
+
+function clearRegisterError(): void {
+  const errorEl = document.getElementById('register-error');
+  if (!errorEl) {
+    return;
+  }
+  errorEl.textContent = '';
+  errorEl.classList.remove('visible');
+}
+
+async function submitRegister(fullName: string, email: string, password: string): Promise<void> {
+  const response = await fetch('/api/auth/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({ email, password, fullName }),
+  });
+
+  if (!response.ok) {
+    let message = 'Registration failed. Please try again.';
+    try {
+      const payload = await response.json();
+      if (payload?.error) {
+        message = payload.error;
+      }
+    } catch {
+      // Keep default message if response is not JSON.
+    }
+    throw new Error(message);
+  }
+}
+
+function setupRegister(): void {
+  const form = document.querySelector('.signup-form') as HTMLFormElement | null;
+  const inputs = form?.querySelectorAll('input') ?? [];
+  const fullNameInput = inputs[0] as HTMLInputElement | undefined;
+  const emailInput = inputs[1] as HTMLInputElement | undefined;
+  const passwordInput = inputs[2] as HTMLInputElement | undefined;
+  const confirmInput = inputs[3] as HTMLInputElement | undefined;
+  const submitButton = form?.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+  const googleButton = document.getElementById('google-signup') as HTMLButtonElement | null;
+
+  if (googleButton) {
+    googleButton.addEventListener('click', () => {
+      window.location.href = '/api/auth/google';
+    });
+  }
+
+  if (!form || !fullNameInput || !emailInput || !passwordInput || !confirmInput || !submitButton) {
+    return;
+  }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearRegisterError();
+
+    const fullName = fullNameInput.value.trim();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    const confirmPassword = confirmInput.value;
+
+    if (!fullName || !email || !password || !confirmPassword) {
+      showRegisterError('All fields are required.');
+      return;
+    }
+
+    if (password.length < 8) {
+      showRegisterError('Password must be at least 8 characters.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showRegisterError('Passwords do not match.');
+      return;
+    }
+
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Creating...';
+
+    try {
+      await submitRegister(fullName, email, password);
+      window.location.href = '/payment/';
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Registration failed. Please try again.';
+      showRegisterError(message);
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = originalText || 'Create Account';
+    }
+  });
 }
 
 ready(() => {

@@ -197,6 +197,17 @@ body {
     position: relative;
     width: 100%;
     min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.download-page {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* HEADER */
@@ -432,6 +443,7 @@ interface AuthUserResponse {
         email: string;
         fullName?: string;
     };
+    paid?: boolean;
 }
 
 async function fetchUser() {
@@ -445,6 +457,10 @@ async function fetchUser() {
     const payload = (await response.json()) as AuthUserResponse;
     if (!payload.authenticated) {
         window.location.href = '/register/';
+        return null;
+    }
+    if (!payload.paid) {
+        window.location.href = '/payment/';
         return null;
     }
     return payload.user;

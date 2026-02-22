@@ -34,6 +34,8 @@ const template = `<div class="page-container">
         <span>OR</span>
       </div>
 
+      <div id="signin-error" class="form-error" role="alert"></div>
+
       <form class="login-form">
         <div class="form-group">
           <label>Email</label>
@@ -256,6 +258,21 @@ img {
     font-size: 11px;
 }
 
+  .form-error {
+    display: none;
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #fff3f3;
+    color: #b10000;
+    font-size: 12px;
+    border: 1px solid #ffd6d6;
+  }
+
+  .form-error.visible {
+    display: block;
+  }
+
 .form-group {
     margin-bottom: 20px;
 }
@@ -349,6 +366,111 @@ async function start() {
     removeGlobalStyles();
     injectPageStyles(signinStyles, 'page-signin-styles');
     await initPageEnhancements();
+  setupSignin();
+}
+
+function showSigninError(message: string): void {
+  const errorEl = document.getElementById('signin-error');
+  if (!errorEl) {
+    alert(message);
+    return;
+  }
+  errorEl.textContent = message;
+  errorEl.classList.add('visible');
+}
+
+function clearSigninError(): void {
+  const errorEl = document.getElementById('signin-error');
+  if (!errorEl) {
+    return;
+  }
+  errorEl.textContent = '';
+  errorEl.classList.remove('visible');
+}
+
+interface SigninResponse {
+  paid?: boolean;
+  paymentRequired?: boolean;
+}
+
+async function submitSignin(email: string, password: string): Promise<SigninResponse> {
+  const response = await fetch('/api/auth/signin', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!response.ok) {
+    let message = 'Sign in failed. Please try again.';
+    try {
+      const payload = await response.json();
+      if (payload?.error) {
+        message = payload.error;
+      }
+    } catch {
+      // Keep default message if response is not JSON.
+    }
+    throw new Error(message);
+  }
+
+  try {
+    return (await response.json()) as SigninResponse;
+  } catch {
+    return {};
+  }
+}
+
+function setupSignin(): void {
+  const form = document.querySelector('.login-form') as HTMLFormElement | null;
+  const emailInput = form?.querySelector('input[type="email"]') as HTMLInputElement | null;
+  const passwordInput = form?.querySelector('input[type="password"]') as HTMLInputElement | null;
+  const submitButton = form?.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+  const googleButton = document.getElementById('google-signin') as HTMLButtonElement | null;
+
+  if (googleButton) {
+    googleButton.addEventListener('click', () => {
+      window.location.href = '/api/auth/google';
+    });
+  }
+
+  if (!form || !emailInput || !passwordInput || !submitButton) {
+    return;
+  }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearSigninError();
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!email || !password) {
+      showSigninError('Email and password are required.');
+      return;
+    }
+
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Signing in...';
+
+    try {
+      const payload = await submitSignin(email, password);
+      if (payload.paymentRequired || payload.paid === false) {
+        window.location.href = '/payment/';
+      } else {
+        window.location.href = '/dashboard/';
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Sign in failed. Please try again.';
+      showSigninError(message);
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = originalText || 'Sign In';
+    }
+  });
 }
 
 ready(() => {

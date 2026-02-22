@@ -42,7 +42,15 @@ const template = `<div id="main">
                 <a href="/technology/">Technology</a>
                 <a href="/contact/" class="active">Contact</a>
             </div>
-            <div class="btn">Explore Products</div>
+            <div class="actions">
+                <div class="signin">
+                    <a href="/signin/">Sign In</a>
+                </div>
+                <div class="register">
+                    <a href="/register/">Register</a>
+                </div>
+                <div class="btn">Explore Products</div>
+            </div>
 
             <div class="menu">
                 <hr>
@@ -247,6 +255,46 @@ body {
     background-color: var(--color-primary);
     border-radius: var(--radius-lg);
     color: var(--color-bg);
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.signin {
+    margin-right: 30px;
+}
+
+.signin a {
+    color: var(--color-text);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    opacity: 0.9;
+    transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.signin a:hover {
+    color: var(--color-primary);
+    opacity: 1;
+}
+
+.register {
+    margin-right: 20px;
+}
+
+.register a {
+    color: var(--color-text);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    opacity: 0.9;
+    transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.register a:hover {
+    color: var(--color-primary);
+    opacity: 1;
 }
 
 
