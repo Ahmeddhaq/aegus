@@ -411,7 +411,7 @@ async function submitSignin(email: string, password: string): Promise<SigninResp
         message = payload.error;
       }
     } catch {
-      // Keep default message if response is not JSON.
+      
     }
     throw new Error(message);
   }

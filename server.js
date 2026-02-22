@@ -103,11 +103,11 @@ const razorpay = new Razorpay({
   key_secret: process.env.TEST_SECRET,
 });
 
-// ============== MIDDLEWARE ==============
 
-/**
- * Middleware to verify session token from cookie
- */
+
+
+
+
 async function verifySessionMiddleware(req, res, next) {
   const sessionToken = req.cookies.sessionToken;
   
@@ -136,17 +136,17 @@ async function getPaidStatus(userId) {
   };
 }
 
-// ============== AUTHENTICATION ROUTES ==============
 
-/**
- * POST /api/auth/register
- * Register a new user with email and password
- */
+
+
+
+
+
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { email, password, fullName } = req.body;
 
-    // Validation
+    
     if (!email || !password || !fullName) {
       return res.status(400).json({ 
         error: 'Missing required fields',
@@ -168,22 +168,22 @@ app.post('/api/auth/register', async (req, res) => {
       });
     }
 
-    // Register user
+    
     const { user } = await registerUser(email, password, fullName);
 
-    // Create session
+    
     const ipAddress = req.ip || req.connection.remoteAddress;
     const userAgent = req.headers['user-agent'];
     const { sessionToken, expiresAt } = await createSession(user.id, ipAddress, userAgent);
 
     console.log('✅ User registered');
 
-    // Set secure httpOnly cookie
+    
     res.cookie('sessionToken', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000, 
       path: '/',
     });
 
@@ -215,10 +215,10 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-/**
- * POST /api/auth/signin
- * Sign in user with email and password
- */
+
+
+
+
 app.post('/api/auth/signin', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -230,23 +230,23 @@ app.post('/api/auth/signin', async (req, res) => {
       });
     }
 
-    // Sign in user
+    
     const { user, profile } = await signInUser(email, password);
     const paid = Boolean(profile?.is_paid);
 
-    // Create session
+    
     const ipAddress = req.ip || req.connection.remoteAddress;
     const userAgent = req.headers['user-agent'];
     const { sessionToken, expiresAt } = await createSession(user.id, ipAddress, userAgent);
 
     console.log('✅ User signed in');
 
-    // Set secure httpOnly cookie
+    
     res.cookie('sessionToken', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000, 
       path: '/',
     });
 
@@ -278,10 +278,10 @@ app.post('/api/auth/signin', async (req, res) => {
   }
 });
 
-/**
- * POST /api/auth/signout
- * Sign out user and clear session
- */
+
+
+
+
 app.post('/api/auth/signout', async (req, res) => {
   try {
     const sessionToken = req.cookies.sessionToken;
@@ -304,10 +304,10 @@ app.post('/api/auth/signout', async (req, res) => {
   }
 });
 
-/**
- * GET /api/auth/check
- * Check if user is authenticated
- */
+
+
+
+
 app.get('/api/auth/check', async (req, res) => {
   try {
     const sessionToken = req.cookies.sessionToken;
@@ -322,7 +322,7 @@ app.get('/api/auth/check', async (req, res) => {
       return res.status(401).json({ error: 'Session expired', code: 'SESSION_EXPIRED' });
     }
 
-    // Get user and profile data
+    
     const { paid, userData } = await getPaidStatus(session.user_id);
     
     if (!userData) {
@@ -347,18 +347,18 @@ app.get('/api/auth/check', async (req, res) => {
   }
 });
 
-/**
- * GET /api/auth/google
- * Redirect to Supabase Google OAuth
- */
+
+
+
+
 app.get('/api/auth/google', (req, res) => {
   try {
-    // Construct Supabase OAuth URL
+    
     const redirectUrl = encodeURIComponent(
       `${req.protocol}://${req.get('host')}/api/auth/google/callback`
     );
 
-    // Redirect to Supabase OAuth endpoint
+    
     const oauthUrl = `${process.env.SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${redirectUrl}`;
     
     res.redirect(oauthUrl);
@@ -368,10 +368,10 @@ app.get('/api/auth/google', (req, res) => {
   }
 });
 
-/**
- * GET /api/auth/google/callback
- * Handle Google OAuth callback from Supabase
- */
+
+
+
+
 app.get('/api/auth/google/callback', async (req, res) => {
   try {
     const { code } = req.query;
@@ -380,7 +380,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
       return res.status(400).json({ error: 'No authorization code' });
     }
 
-    // Exchange code for session via Supabase
+    
     const { data, error } = await adminClient.auth.exchangeCodeForSession(code);
 
     if (error) throw error;
@@ -406,17 +406,17 @@ app.get('/api/auth/google/callback', async (req, res) => {
       }
     }
 
-    // Create session in database
+    
     const ipAddress = req.ip || req.connection.remoteAddress;
     const userAgent = req.headers['user-agent'];
     const { sessionToken } = await createSession(data.user.id, ipAddress, userAgent);
 
-    // Set secure httpOnly cookie
+    
     res.cookie('sessionToken', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000, 
       path: '/',
     });
 
@@ -428,7 +428,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
   }
 });
 
-// ============== PAGE ACCESS GUARDS ==============
+
 
 app.use('/dashboard', async (req, res, next) => {
   const sessionToken = req.cookies.sessionToken;
@@ -508,15 +508,15 @@ app.get('/dist/:entry.js', (req, res, next) => {
   }
 });
 
-// Serve static files from the root directory
+
 app.use(express.static(path.join(__dirname)));
 
-// ============== PAYMENT ROUTES ==============
 
-/**
- * POST /api/create-order
- * Create a Razorpay order
- */
+
+
+
+
+
 app.post('/api/create-order', verifySessionMiddleware, async (req, res) => {
   try {
     const { amount = 49900, currency = 'INR', email } = req.body || {};
@@ -540,10 +540,10 @@ app.post('/api/create-order', verifySessionMiddleware, async (req, res) => {
   }
 });
 
-/**
- * POST /api/verify-payment
- * Verify payment signature from Razorpay
- */
+
+
+
+
 app.post('/api/verify-payment', verifySessionMiddleware, async (req, res) => {
   try {
     const { orderId, paymentId, signature } = req.body || {};
@@ -573,10 +573,10 @@ app.post('/api/verify-payment', verifySessionMiddleware, async (req, res) => {
   }
 });
 
-/**
- * GET /api/billing/status
- * Check if the signed-in user has completed payment
- */
+
+
+
+
 app.get('/api/billing/status', verifySessionMiddleware, async (req, res) => {
   try {
     const { paid } = await getPaidStatus(req.user.id);
@@ -587,7 +587,7 @@ app.get('/api/billing/status', verifySessionMiddleware, async (req, res) => {
   }
 });
 
-// ============== SERVER STARTUP ==============
+
 
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;

@@ -403,7 +403,7 @@ async function submitRegister(fullName: string, email: string, password: string)
         message = payload.error;
       }
     } catch {
-      // Keep default message if response is not JSON.
+      
     }
     throw new Error(message);
   }
